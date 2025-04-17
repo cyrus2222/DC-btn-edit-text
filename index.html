@@ -594,6 +594,53 @@
             align-items: center;
         }
 
+        .time-tool-link {
+            margin: 10px 0;
+            text-align: center;
+            padding: 10px;
+            background: linear-gradient(45deg, rgba(88, 101, 242, 0.2), rgba(0, 176, 244, 0.2));
+            border-radius: 8px;
+            border: 1px solid rgba(88, 101, 242, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .time-tool-link a {
+            color: #00b0f4;
+            text-decoration: none;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .time-tool-link:hover {
+            background: linear-gradient(45deg, rgba(88, 101, 242, 0.3), rgba(0, 176, 244, 0.3));
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(88, 101, 242, 0.2);
+        }
+
+        .time-tool-link .time-icon {
+            font-size: 1.2em;
+            animation: pulse 2s infinite;
+        }
+
+        .time-tool-link .arrow {
+            font-size: 1.2em;
+            transition: transform 0.3s ease;
+        }
+
+        .time-tool-link:hover .arrow {
+            transform: translateX(5px);
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+
         .reminder {
             color: #00b0f4;
             font-weight: bold;
@@ -699,6 +746,14 @@
         <span>非空白字元：<span id="nonWhiteSpaceCount">0</span></span>
         <span>總字元數：<span id="totalCount">0</span></span>
         <span class="reminder">記得先框選文字再按按鈕</span>
+    </div>
+    
+    <div class="time-tool-link">
+        <a href="https://hammertime.cyou/zh-TW" target="_blank">
+            <span class="time-icon">⌚</span>
+            想在訊息中添加 DC 時間語法請前往這
+            <span class="arrow">→</span>
+        </a>
     </div>
     
     <div class="main-container">
