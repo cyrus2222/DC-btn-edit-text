@@ -1,0 +1,1404 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discord 按鈕編輯文字格式</title>
+    <link rel="icon" type="image/png" href="logo.png">
+    <style>
+        :root {
+            --discord-bg: #36393f;
+            --discord-text: #dcddde;
+            --discord-primary: #5865f2;
+            --discord-secondary: #4f545c;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--discord-bg);
+            background-image: url('backimage.png');
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-attachment: fixed;
+            color: var(--discord-text);
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* 添加一個半透明的遮罩層 */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(54, 57, 63, 0.85); /* Discord 背景色配合透明度 */
+            z-index: -1;
+        }
+
+        /* 確保所有內容在遮罩層上方 */
+        .main-container,
+        h1,
+        .stats-bar,
+        .footer {
+            position: relative;
+            z-index: 1;
+        }
+
+        h1 {
+            color: var(--discord-text);
+            margin-bottom: 5px;
+            font-size: 2em;
+            text-align: center;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            padding: 10px 0;
+        }
+
+        .subtitle {
+            color: #00b0f4; /* Discord 藍色 */
+            margin-bottom: 15px;
+            font-size: 1em;
+            text-align: center;
+            font-weight: 600;
+            padding: 5px 15px;
+            background-color: rgba(0, 176, 244, 0.1);
+            border-radius: 6px;
+            border: 1px solid rgba(0, 176, 244, 0.2);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            animation: pulse 2s infinite;
+            display: inline-block;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(0, 176, 244, 0.4);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(0, 176, 244, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(0, 176, 244, 0);
+            }
+        }
+
+        .main-container {
+            width: 100%;
+            max-width: 1400px;
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            align-items: flex-start;
+            position: relative;
+        }
+
+        .button-section {
+            flex: 0 0 200px;
+            padding: 15px;
+            background: rgba(32, 34, 37, 0.3);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 400px; /* 設定最大高度 */
+            overflow-y: auto; /* 添加垂直滾動 */
+        }
+
+        .button-section h2 {
+            color: #00b0f4;
+            margin: 0 0 15px 0;
+            font-size: 1.2em;
+            text-align: center;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .button-group-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            overflow-y: visible; /* 確保按鈕容器內容可以完整顯示 */
+        }
+
+        .button-container button {
+            width: 100%;
+            text-align: center;
+            background-color: #2f3136;
+            color: #ffffff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .button-container button:hover {
+            background-color: #5865f2;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .center-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            min-width: 300px;
+        }
+
+        .editor-wrap {
+            width: 100%;
+            background: #2f3136;
+            border-radius: 4px;
+            border: 1px solid var(--discord-secondary);
+            display: flex;
+            height: 400px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .editor-content {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #textArea {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0 12px;
+            border: none;
+            background: transparent;
+            color: var(--discord-text);
+            font-family: Consolas, 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 21px;
+            resize: none;
+            outline: none;
+            overflow-y: scroll;
+            box-sizing: border-box;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            overflow-x: scroll;
+            tab-size: 4;
+        }
+
+        /* 自定義滾動條樣式 */
+        #textArea::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #textArea::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+        }
+
+        #textArea::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+
+        #textArea::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* 高亮效果 */
+        .highlight-line {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        /* 行懸停效果 */
+        .line-hover {
+            position: absolute;
+            left: 0;
+            width: 100%;
+            height: 21px;
+            background-color: rgba(255, 255, 255, 0.05);
+            pointer-events: none;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: var(--discord-bg);
+            padding: 20px;
+            border-radius: 4px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+        }
+
+        .modal input {
+            width: 100%;
+            padding: 8px;
+            margin: 10px 0;
+            background-color: #40444b;
+            color: var(--discord-text);
+            border: 1px solid var(--discord-secondary);
+            border-radius: 4px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        /* 通知樣式 */
+        #toast {
+            visibility: hidden;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            min-width: 200px;
+            color: #fff;
+            text-align: center;
+            border-radius: 4px;
+            padding: 16px;
+            z-index: 1000;
+            font-size: 14px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        #toast.success {
+            background-color: #43b581;
+        }
+
+        #toast.warning {
+            background-color: #f04747;
+        }
+
+        #toast.show {
+            visibility: visible;
+            animation: fadein 0.3s, fadeout 0.3s 1.7s;
+        }
+
+        @keyframes fadein {
+            from {opacity: 0;}
+            to {opacity: 1;}
+        }
+
+        @keyframes fadeout {
+            from {opacity: 1;}
+            to {opacity: 0;}
+        }
+
+        /* 選取樣式 */
+        #textArea::selection {
+            background-color: rgba(0, 120, 215, 0.6);
+            color: white;
+        }
+
+        /* 行號選取樣式 */
+        .line-numbers div:hover {
+            background-color: #2a2d2e;
+        }
+
+        .button-group {
+            width: 100%;
+            display: flex;
+            gap: 20px;
+            margin-top: 10px;
+            justify-content: flex-end;
+        }
+
+        .action-button {
+            min-width: 100px;
+            padding: 10px 20px;
+            background-color: #40444b;
+            color: var(--discord-text);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .action-button:hover {
+            background-color: #5865f2;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .action-button.clear {
+            background-color: #5f0002; /* 暗紅色 */
+            color: var(--discord-text); /* 如果需要可以改成白色：#ffffff */
+            margin-right: auto;
+         }
+         .action-button.clear:hover {
+            background-color: #230001; /* 應用在懸停時 */
+        }
+
+        /* 針對兩側按鈕區塊內的按鈕（位於 .button-group-container 中） */
+.button-group-container button {
+    width: 100%;
+    background-color: rgba(32,34,37,0.3);  /* 與容器相同的背景色 */
+    color: #ffffff;                         /* 白色文字 */
+    border: 1px solid rgba(255,255,255,0.1);  /* 輕微的邊框 */
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.button-group-container button:hover {
+    background-color: rgba(32,34,37,0.5);  /* 懸停時加深背景色 */
+}
+
+        /* 預設樣式（大視窗） */
+        .menu-toggle {
+            display: none;
+        }
+
+        .button-section {
+            flex: 0 0 200px;
+            padding: 15px;
+            background: rgba(32, 34, 37, 0.3);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 400px; /* 設定最大高度 */
+            overflow-y: auto; /* 添加垂直滾動 */
+        }
+
+        /* 自定義滾動條樣式 */
+        .button-section::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .button-section::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+        }
+
+        .button-section::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+
+        .button-section::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .button-group-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            overflow-y: visible; /* 確保按鈕容器內容可以完整顯示 */
+        }
+
+        /* 中等視窗樣式 */
+        @media (max-width: 1200px) {
+            .button-group {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+                padding: 10px;
+            }
+
+            .action-button {
+                width: 100%;
+                padding: 10px;
+                font-size: 14px;
+                margin: 0;
+            }
+
+            .action-button.clear {
+                grid-column: 1 / -1;
+                background-color: #5f0002;
+                margin-bottom: 8px;
+            }
+        }
+
+        /* 窄視窗樣式 */
+        @media (max-width: 800px) {
+            .main-container {
+                padding: 0 10px;
+            }
+
+            .menu-toggle {
+                display: flex !important;
+                position: absolute;
+                padding: 8px 12px;
+                background: #2f3136;
+                border: 1px solid var(--discord-secondary);
+                border-radius: 4px;
+                cursor: pointer;
+                z-index: 1000;
+                color: white;
+                align-items: center;
+                gap: 8px;
+                transition: all 0.3s ease;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            }
+
+            .menu-toggle.left {
+                left: 10px;
+                top: 10px;
+            }
+
+            .menu-toggle.right {
+                right: 10px;
+                top: 10px;
+            }
+
+            .toggle-icon {
+                font-size: 12px;
+                transition: transform 0.3s;
+            }
+
+            .toggle-text {
+                font-size: 14px;
+                white-space: nowrap;
+            }
+
+            .menu-toggle.active .toggle-icon {
+                transform: rotate(90deg);
+            }
+
+            .menu-toggle.right.active .toggle-icon {
+                transform: rotate(-90deg);
+            }
+
+            .button-section {
+                display: none;
+                position: fixed;
+                top: 45px;
+                width: 200px;
+                background: #2f3136;
+                border: 1px solid var(--discord-secondary);
+                padding: 15px;
+                border-radius: 4px;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+                z-index: 1001;
+                max-height: calc(100vh - 60px);
+                overflow-y: auto;
+            }
+
+            #leftButtonSection {
+                left: 10px;
+            }
+
+            #rightButtonSection {
+                right: 10px;
+            }
+
+            .button-section.active {
+                display: block;
+            }
+
+            .center-content {
+                margin: 50px 0 0 0;
+                width: 100%;
+            }
+
+            .button-group-container {
+                display: flex;
+                flex-direction: column;
+                gap: 5px;
+            }
+
+            .button-group-container button {
+                width: 100%;
+                text-align: left;
+                padding: 8px 10px;
+            }
+
+            .stats-bar {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .reminder {
+                width: 100%;
+                text-align: center;
+                margin-top: 5px;
+            }
+
+            .editor-wrap {
+                height: 200px;
+            }
+        }
+
+        /* 更窄的視窗樣式 */
+        @media (max-width: 600px) {
+            .main-container {
+                padding: 0 5px;
+            }
+
+            .button-group {
+                grid-template-columns: 1fr;
+            }
+
+            .button-section {
+                width: calc(100vw - 60px); /* 減少寬度 */
+                max-width: 280px; /* 設定最大寬度 */
+                left: 50%;
+                transform: translateX(-50%); /* 水平置中 */
+            }
+
+            #leftButtonSection,
+            #rightButtonSection {
+                left: 50%;
+                transform: translateX(-50%);
+                right: auto;
+            }
+
+            .menu-toggle {
+                width: auto;
+                min-width: 100px;
+            }
+
+            .menu-toggle.left {
+                left: 5px;
+            }
+
+            .menu-toggle.right {
+                right: 5px;
+            }
+
+            /* 確保按鈕文字在窄螢幕上不會換行 */
+            .button-group-container button {
+                white-space: normal;
+                height: auto;
+                min-height: 40px;
+                line-height: 1.2;
+                padding: 8px;
+            }
+        }
+
+        .stats-bar {
+            background: rgba(32, 34, 37, 0.3);
+            padding: 8px 15px;
+            border-radius: 4px;
+            margin: 5px 0;
+            display: flex;
+            gap: 20px;
+            justify-content: space-between;
+            font-size: 0.9em;
+            color: #dcddde;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            align-items: center;
+        }
+
+        .reminder {
+            color: #00b0f4;
+            font-weight: bold;
+            margin-left: auto;
+            white-space: nowrap;
+        }
+
+        .footer {
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(32, 34, 37, 0.3);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+            font-size: 0.9em;
+            color: #dcddde;
+            position: relative;
+            z-index: 1000;
+        }
+
+        .footer p {
+            margin: 5px 0;
+        }
+
+        .footer a {
+            color: #00b0f4;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .footer a:hover {
+            color: #fff;
+            text-decoration: underline;
+        }
+
+        .button-section-divider {
+            padding: 10px;
+            margin: 5px 0;
+            background: rgba(0, 176, 244, 0.1);
+            border: 1px solid rgba(0, 176, 244, 0.2);
+            border-radius: 4px;
+            color: #00b0f4;
+            font-size: 0.9em;
+            text-align: center;
+        }
+
+        .video-container {
+            margin-top: 20px;
+            position: relative;
+            width: 100%;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(88, 101, 242, 0.4);
+            background: linear-gradient(45deg, #5865f2, #00b0f4);
+            padding: 3px;
+        }
+
+        .video-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, #5865f2, #00b0f4, #5865f2);
+            background-size: 200% 200%;
+            animation: gradient 5s ease infinite;
+            z-index: -1;
+            border-radius: 15px;
+        }
+
+        .video-inner {
+            position: relative;
+            width: 100%;
+            background: #36393f;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .video-inner video {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+
+        @keyframes gradient {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.14/ace.js"></script>
+</head>
+<body>
+    <h1>Discord 按鈕編輯文字格式</h1>
+    <div class="stats-bar">
+        <span>空白字元：<span id="whiteSpaceCount">0</span></span>
+        <span>非空白字元：<span id="nonWhiteSpaceCount">0</span></span>
+        <span>總字元數：<span id="totalCount">0</span></span>
+        <span class="reminder">記得先框選文字再按按鈕</span>
+    </div>
+    
+    <div class="main-container">
+        <button class="menu-toggle left" id="leftMenuToggle" aria-label="切換文字格式選單">
+            <span class="toggle-icon">▶</span>
+            <span class="toggle-text">文字格式</span>
+        </button>
+        
+        <div class="button-section" id="leftButtonSection">
+            <h2>文字格式</h2>
+            <div class="button-group-container">
+                <button onclick="addHiddenText()">隱藏文字</button>
+                <button onclick="addBold()">粗體</button>
+                <button onclick="addItalic()">斜體</button>
+                <button onclick="addStrikethrough()">刪除線</button>
+                <button onclick="addCode()">代碼塊</button>
+                <button onclick="addLink()">文字超連結</button>
+            </div>
+        </div>
+
+        <div class="center-content">
+            <div class="editor-wrap">
+                <div class="editor-content">
+                    <textarea id="textArea" placeholder="在這裡輸入文字..."></textarea>
+                </div>
+            </div>
+            
+            <div class="button-group">
+                <button class="action-button clear" onclick="clearText(event)">清空文字</button>
+                <button class="action-button" onclick="selectAllText(event)">全選文字</button>
+                <button class="action-button" onclick="undoLastAction(event)">返回上一步</button>
+                <button class="action-button" onclick="redoLastAction(event)">返回下一步</button>
+                <button class="action-button" onclick="copyText(event)">複製文字</button>
+            </div>
+
+            <div class="video-container">
+                <div class="video-inner">
+                    <video controls>
+                        <source src="示範影片.mp4" type="video/mp4">
+                        您的瀏覽器不支援影片播放。
+                    </video>
+                </div>
+            </div>
+        </div>
+
+        <button class="menu-toggle right" id="rightMenuToggle" aria-label="切換段落格式選單">
+            <span class="toggle-icon">◀</span>
+            <span class="toggle-text">段落格式</span>
+        </button>
+        
+        <div class="button-section" id="rightButtonSection">
+            <h2>段落格式</h2>
+            <div class="button-group-container">
+                <button onclick="addCodeBlock()">更凸顯、電腦可直接複製的代碼塊（各段）</button>
+                <button onclick="addCodeBlockWhole()">更凸顯、電腦可直接複製的代碼塊（選取範圍）</button>
+                <div class="button-section-divider">以下按鈕產生的符號要在句首才奏效</div>
+                <button onclick="addQuote()">縮行引用文字</button>
+                <button onclick="addParentList()">母項目清單符號</button>
+                <button onclick="addNestedList()">母子項目清單符號</button>
+                <button onclick="addNumberList()">數字清單符號</button>
+                <button onclick="addHeading1()">大小變化-變更大</button>
+                <button onclick="addHeading2()">大小變化-變大</button>
+                <button onclick="addHeading3()">變粗、增加行距</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="linkModal" class="modal">
+        <h3>輸入連結</h3>
+        <input type="text" id="linkInput" placeholder="請輸入連結">
+        <div class="modal-buttons">
+            <button onclick="confirmLink()">確定</button>
+            <button onclick="cancelLink()">取消</button>
+        </div>
+    </div>
+
+    <!-- 添加數字清單 Modal -->
+    <div id="numberListModal" class="modal">
+        <h3>請輸入起始數字</h3>
+        <input type="number" id="startNumber" placeholder="請輸入數字" min="1" value="1">
+        <div class="modal-buttons">
+            <button onclick="confirmNumberList()">確定</button>
+            <button onclick="cancelNumberList()">取消</button>
+        </div>
+    </div>
+
+    <!-- 添加通知元素 -->
+    <div id="toast"></div>
+
+    <footer class="footer">
+        <p>© 2025 4月 軒轅十三 版權所有</p>
+        <p>有任何網頁錯誤或 Discord 問題歡迎來信：<a href="mailto:a052705@gmail.com">a052705@gmail.com</a></p>
+    </footer>
+
+    <script>
+        let textArea = document.getElementById('textArea');
+        let linkModal = document.getElementById('linkInput');
+        let selectedText = '';
+        let selectionStart = 0;
+        let selectionEnd = 0;
+
+        // 撤銷功能相關變數
+        let undoStack = [''];
+        let redoStack = [];
+        let currentState = '';
+        let isComposing = false;
+
+        // 保存狀態
+        function saveState() {
+            const newText = textArea.value;
+            if (newText !== currentState) {
+                undoStack.push(newText);
+                currentState = newText;
+                redoStack = [];
+                updateCharacterCount();
+                
+                if (undoStack.length > 100) {
+                    undoStack.shift();
+                }
+            }
+        }
+
+        // 撤銷
+        function undoLastAction(event) {
+            event.preventDefault();
+            
+            if (undoStack.length > 1) {
+                redoStack.push(textArea.value);
+                undoStack.pop();
+                const previousText = undoStack[undoStack.length - 1];
+                
+                textArea.value = previousText;
+                currentState = previousText;
+                
+                updateCharacterCount();
+                textArea.focus();
+            }
+        }
+
+        // 重做
+        function redoLastAction(event) {
+            event.preventDefault();
+            
+            if (redoStack.length > 0) {
+                const nextText = redoStack.pop();
+                undoStack.push(textArea.value);
+                
+                textArea.value = nextText;
+                currentState = nextText;
+                
+                updateCharacterCount();
+                textArea.focus();
+            }
+        }
+
+        // 清空文字
+        function clearText(event) {
+            event.preventDefault();
+            
+            if (textArea.value !== '') {
+                saveState();
+                textArea.value = '';
+                saveState();
+                updateCharacterCount();
+                textArea.focus();
+                showToast('已清空文字', 'success');
+            }
+        }
+
+        // 複製文字
+        function copyText(event) {
+            event.preventDefault();
+            
+            const originalStart = textArea.selectionStart;
+            const originalEnd = textArea.selectionEnd;
+            
+            textArea.select();
+            document.execCommand('copy');
+            
+            textArea.setSelectionRange(originalStart, originalEnd);
+            textArea.focus();
+            showToast('已複製文字！', 'success');
+        }
+
+        // 監聽文字輸入
+        textArea.addEventListener('input', function() {
+            if (!isComposing) {
+                saveState();
+                updateCharacterCount();
+            }
+        });
+
+        // 監聽中文輸入開始
+        textArea.addEventListener('compositionstart', function() {
+            isComposing = true;
+        });
+
+        // 監聽中文輸入結束
+        textArea.addEventListener('compositionend', function() {
+            isComposing = false;
+            saveState();
+            updateCharacterCount();
+        });
+
+        // 監聽貼上事件
+        textArea.addEventListener('paste', function() {
+            setTimeout(function() {
+                saveState();
+                updateCharacterCount();
+            }, 0);
+        });
+
+        // 監聽按鍵
+        textArea.addEventListener('keydown', function(e) {
+            if (e.ctrlKey) {
+                if (e.key === 'z') {
+                    e.preventDefault();
+                    undoLastAction(e);
+                } else if (e.key === 'y') {
+                    e.preventDefault();
+                    redoLastAction(e);
+                }
+            }
+        });
+
+        // 恢復所有按鈕功能
+        function processTextByLine(prefix, suffix) {
+            // 確保使用最新的選取狀態
+            updateSelectionState();
+            
+            if (!selectedText) {
+                showToast('請先選擇文字', 'warning');
+                return;
+            }
+
+            // 將選取的文字分成多行
+            const lines = selectedText.split('\n');
+            
+            // 處理每一行文字
+            const processedText = lines.map(line => {
+                if (line.trim() === '') return '';
+                // 檢查這行是否已經有標記
+                if (line.startsWith(prefix) && line.endsWith(suffix)) {
+                    // 如果有，移除標記
+                    return line.slice(prefix.length, -suffix.length);
+                } else {
+                    // 如果沒有，添加標記
+                    return prefix + line + suffix;
+                }
+            }).join('\n');  // 用換行符號連接處理後的行
+
+            // 更新文本
+            const text = textArea.value;
+            textArea.value = text.substring(0, selectionStart) + 
+                           processedText + 
+                           text.substring(selectionEnd);
+
+            // 更新選取範圍
+            const newEnd = selectionStart + processedText.length;
+            textArea.setSelectionRange(selectionStart, newEnd);
+            
+            // 更新狀態
+            updateSelectionState();
+            saveState();
+            textArea.focus();
+        }
+
+        function addHiddenText() {
+            processTextByLine('||', '||');
+        }
+
+        function addBold() {
+            processTextByLine('**', '**');
+        }
+
+        function addItalic() {
+            processTextByLine('*', '*');
+        }
+
+        function addStrikethrough() {
+            processTextByLine('~~', '~~');
+        }
+
+        function addCode() {
+            processTextByLine('`', '`');
+        }
+
+        function addCodeBlock() {
+            // 確保使用最新的選取狀態
+            updateSelectionState();
+            
+            if (!selectedText) {
+                showToast('請先選擇文字', 'warning');
+                return;
+            }
+
+            // 將選取的文字分成多行
+            const lines = selectedText.split('\n');
+            
+            // 處理每一行文字
+            const processedText = lines.map(line => {
+                if (line.trim() === '') return '';
+                // 檢查這行是否已經有標記
+                if (line.startsWith('```') && line.endsWith('```')) {
+                    // 如果有，移除標記
+                    return line.slice(3, -3);
+                } else {
+                    // 如果沒有，添加標記
+                    return '```' + line + '```';
+                }
+            }).join('\n');
+
+            // 更新文本
+            const text = textArea.value;
+            textArea.value = text.substring(0, selectionStart) + 
+                            processedText + 
+                            text.substring(selectionEnd);
+
+            // 更新選取範圍
+            const newEnd = selectionStart + processedText.length;
+            textArea.setSelectionRange(selectionStart, newEnd);
+            
+            // 更新狀態
+            updateSelectionState();
+            saveState();
+            textArea.focus();
+        }
+
+        function processLinePrefix(prefix) {
+            // 確保使用最新的選取狀態
+            updateSelectionState();
+            
+            if (!selectedText) {
+                showToast('請先選擇文字', 'warning');
+                return;
+            }
+
+            // 將選取的文字分成多行
+            const lines = selectedText.split('\n');
+            
+            // 檢查第一行是否已有前綴，用來決定是添加還是移除
+            const shouldRemove = lines[0].startsWith(prefix);
+            
+            // 處理每一行
+            const processedText = lines.map(line => {
+                if (shouldRemove && line.startsWith(prefix)) {
+                    // 如果需要移除前綴，只移除前綴部分
+                    return line.substring(prefix.length);
+                } else if (!line.startsWith(prefix)) {
+                    // 如果需要添加前綴
+                    return prefix + line;
+                }
+                return line;
+            }).join('\n');
+
+            // 更新文本
+            const text = textArea.value;
+            textArea.value = text.substring(0, selectionStart) + 
+                            processedText + 
+                            text.substring(selectionEnd);
+
+            // 更新選取範圍
+            const newEnd = selectionStart + processedText.length;
+            textArea.setSelectionRange(selectionStart, newEnd);
+            
+            // 更新狀態
+            updateSelectionState();
+            saveState();
+            textArea.focus();
+        }
+
+        function addQuote() {
+            processLinePrefix('> ');
+        }
+
+        function addParentList() {
+            processLinePrefix('- ');
+        }
+
+        function addNestedList() {
+            const lines = selectedText.split('\n');
+            const newText = lines.map((line, index) => {
+                if (line.startsWith('- ')) {
+                    return line.substring(2);
+                } else if (line.startsWith('  - ')) {
+                    return line.substring(4);
+                }
+                return (index === 0 ? '- ' : '  - ') + line;
+            }).join('\n');
+
+            const text = textArea.value;
+            textArea.value = text.substring(0, selectionStart) + newText + text.substring(selectionEnd);
+            
+            const newSelectionEnd = selectionStart + newText.length;
+            textArea.setSelectionRange(selectionStart, newSelectionEnd);
+            selectionEnd = newSelectionEnd;
+            selectedText = newText;
+            
+            textArea.focus();
+            saveState();
+        }
+
+        function addHeading1() {
+            processLinePrefix('# ');
+        }
+
+        function addHeading2() {
+            processLinePrefix('## ');
+        }
+
+        function addHeading3() {
+            processLinePrefix('### ');
+        }
+
+        // 通知函數
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `show ${type}`;
+            
+            // 2秒後隱藏通知
+            setTimeout(function() {
+                toast.className = '';
+            }, 2000);
+        }
+
+        // 折疊選單功能
+        const leftMenuToggle = document.getElementById('leftMenuToggle');
+        const rightMenuToggle = document.getElementById('rightMenuToggle');
+        const leftButtonSection = document.getElementById('leftButtonSection');
+        const rightButtonSection = document.getElementById('rightButtonSection');
+
+        leftMenuToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            leftMenuToggle.classList.toggle('active');
+            leftButtonSection.classList.toggle('active');
+            // 關閉另一側選單
+            rightMenuToggle.classList.remove('active');
+            rightButtonSection.classList.remove('active');
+        });
+
+        rightMenuToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            rightMenuToggle.classList.toggle('active');
+            rightButtonSection.classList.toggle('active');
+            // 關閉另一側選單
+            leftMenuToggle.classList.remove('active');
+            leftButtonSection.classList.remove('active');
+        });
+
+        // 點擊其他區域時關閉選單
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#leftButtonSection') && 
+                !e.target.closest('#rightButtonSection') && 
+                !e.target.closest('.menu-toggle')) {
+                leftMenuToggle.classList.remove('active');
+                rightMenuToggle.classList.remove('active');
+                leftButtonSection.classList.remove('active');
+                rightButtonSection.classList.remove('active');
+            }
+        });
+
+        // 防止選單內的點擊事件冒泡
+        leftButtonSection.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+
+        rightButtonSection.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+
+        // 添加字數統計功能
+        function updateCharacterCount() {
+            const text = textArea.value;
+            const whiteSpaceCount = (text.match(/\s/g) || []).length;
+            const nonWhiteSpaceCount = text.replace(/\s/g, '').length;
+            const totalCount = text.length;
+
+            document.getElementById('whiteSpaceCount').textContent = whiteSpaceCount;
+            document.getElementById('nonWhiteSpaceCount').textContent = nonWhiteSpaceCount;
+            document.getElementById('totalCount').textContent = totalCount;
+        }
+
+        // 在文本變更時更新字數統計
+        textArea.addEventListener('input', updateCharacterCount);
+        textArea.addEventListener('change', updateCharacterCount);
+
+        // 確保頁面載入時也執行一次統計
+        window.addEventListener('load', function() {
+            updateCharacterCount();
+        });
+
+        // 在所有可能改變文本的操作後更新字數統計
+        function saveState() {
+            const newText = textArea.value;
+            if (newText !== currentState) {
+                undoStack.push(newText);
+                currentState = newText;
+                redoStack = [];
+                updateCharacterCount();
+                
+                if (undoStack.length > 100) {
+                    undoStack.shift();
+                }
+            }
+        }
+
+        function addNumberList() {
+            if (!selectedText) {
+                showToast('請先選擇文字', 'warning');
+                return;
+            }
+            document.getElementById('numberListModal').style.display = 'block';
+            document.getElementById('startNumber').focus();
+        }
+
+        function confirmNumberList() {
+            const startNum = parseInt(document.getElementById('startNumber').value) || 1;
+            const lines = selectedText.split('\n');
+            
+            const processedText = lines.map((line, idx) => {
+                if (idx === 0) {
+                    // 第一行：加上數字編號
+                    return `${startNum}. ${line.trim()}`;
+                }
+                // 後續行：加上"- "前綴
+                return `- ${line.trim()}`;
+            }).join('\n');
+
+            // 更新文本
+            const text = textArea.value;
+            textArea.value = text.substring(0, selectionStart) + 
+                           processedText + 
+                           text.substring(selectionEnd);
+            
+            // 更新選取範圍
+            const newEnd = selectionStart + processedText.length;
+            textArea.setSelectionRange(selectionStart, newEnd);
+            selectionEnd = newEnd;
+            selectedText = processedText;
+            
+            // 更新狀態
+            saveState();
+            
+            // 關閉 modal
+            document.getElementById('numberListModal').style.display = 'none';
+            document.getElementById('startNumber').value = '1';
+            textArea.focus();
+        }
+
+        function cancelNumberList() {
+            document.getElementById('numberListModal').style.display = 'none';
+            document.getElementById('startNumber').value = '1';
+            textArea.focus();
+        }
+
+        // 為數字輸入框添加 Enter 鍵確認功能
+        document.getElementById('startNumber').addEventListener('keyup', function(event) {
+            if (event.key === 'Enter') {
+                confirmNumberList();
+            }
+        });
+
+        // 點擊 modal 外部時關閉
+        window.onclick = function(event) {
+            const numberListModal = document.getElementById('numberListModal');
+            if (event.target == numberListModal) {
+                numberListModal.style.display = 'none';
+                document.getElementById('startNumber').value = '1';
+                textArea.focus();
+            }
+        }
+
+        function addLink() {
+            selectedText = textArea.value.substring(selectionStart, selectionEnd);
+            if (!selectedText) {
+                showToast('請先選擇要添加連結的文字', 'warning');
+                return;
+            }
+            document.getElementById('linkModal').style.display = 'block';
+            document.getElementById('linkInput').value = '';
+            document.getElementById('linkInput').focus();
+        }
+
+        function confirmLink() {
+            const linkUrl = document.getElementById('linkInput').value.trim();
+            if (!linkUrl) {
+                showToast('請輸入連結網址', 'warning');
+                return;
+            }
+
+            const text = textArea.value;
+            const linkText = `[${selectedText}](${linkUrl})`;
+            textArea.value = text.substring(0, selectionStart) + 
+                           linkText + 
+                           text.substring(selectionEnd);
+
+            // 更新選取範圍
+            const newEnd = selectionStart + linkText.length;
+            textArea.setSelectionRange(selectionStart, newEnd);
+            selectionEnd = newEnd;
+            selectedText = linkText;
+
+            // 關閉對話框
+            document.getElementById('linkModal').style.display = 'none';
+            document.getElementById('linkInput').value = '';
+
+            // 更新狀態
+            saveState();
+            textArea.focus();
+        }
+
+        function cancelLink() {
+            document.getElementById('linkModal').style.display = 'none';
+            document.getElementById('linkInput').value = '';
+            textArea.focus();
+        }
+
+        // 為連結輸入框添加 Enter 鍵確認功能
+        document.getElementById('linkInput').addEventListener('keyup', function(event) {
+            if (event.key === 'Enter') {
+                confirmLink();
+            } else if (event.key === 'Escape') {
+                cancelLink();
+            }
+        });
+
+        // 點擊對話框外部時關閉
+        window.onclick = function(event) {
+            const linkModal = document.getElementById('linkModal');
+            const numberListModal = document.getElementById('numberListModal');
+            if (event.target == linkModal) {
+                linkModal.style.display = 'none';
+                document.getElementById('linkInput').value = '';
+                textArea.focus();
+            } else if (event.target == numberListModal) {
+                numberListModal.style.display = 'none';
+                document.getElementById('startNumber').value = '1';
+                textArea.focus();
+            }
+        }
+
+        // 添加全選功能
+        function selectAllText(event) {
+            event.preventDefault();
+            textArea.select();
+            textArea.focus();
+            // 更新選取狀態
+            updateSelectionState();
+        }
+
+        // 添加事件監聽器來更新選取狀態
+        textArea.addEventListener('mouseup', updateSelectionState);
+        textArea.addEventListener('keyup', updateSelectionState);
+
+        // 更新選取狀態的函數
+        function updateSelectionState() {
+            selectionStart = textArea.selectionStart;
+            selectionEnd = textArea.selectionEnd;
+            selectedText = textArea.value.substring(selectionStart, selectionEnd);
+        }
+
+        function addCodeBlockWhole() {
+            // 確保使用最新的選取狀態
+            updateSelectionState();
+            
+            if (!selectedText) {
+                showToast('請先選擇文字', 'warning');
+                return;
+            }
+
+            // 檢查選取的文字是否已經是代碼塊
+            const isCodeBlock = selectedText.startsWith('```') && selectedText.endsWith('```');
+            
+            // 根據當前狀態決定是添加還是移除代碼塊標記
+            let processedText;
+            if (isCodeBlock) {
+                // 如果已經是代碼塊，移除標記
+                processedText = selectedText.slice(3, -3);
+            } else {
+                // 如果不是代碼塊，添加標記
+                processedText = '```' + selectedText + '```';
+            }
+
+            // 更新文本
+            const text = textArea.value;
+            textArea.value = text.substring(0, selectionStart) + 
+                            processedText + 
+                            text.substring(selectionEnd);
+
+            // 更新選取範圍
+            const newEnd = selectionStart + processedText.length;
+            textArea.setSelectionRange(selectionStart, newEnd);
+            
+            // 更新狀態
+            updateSelectionState();
+            saveState();
+            textArea.focus();
+        }
+    </script>
+
+</body>
+</html>
